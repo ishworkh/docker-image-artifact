@@ -12,6 +12,7 @@ const resolveArtifactName = (imageName) => `action_image_artifact_${resolvePacka
 
 /**
  * @param {string} image 
+ * @param {number} retentionDays
  * 
  * @returns {string} // Uploaded artifact name
  * 
@@ -20,11 +21,11 @@ const resolveArtifactName = (imageName) => `action_image_artifact_${resolvePacka
  *      `image_artifact_foo_latest`. In short we will have an artifact like,
  *             image_artifact_foo_latest[foo_latest]
  */
-exports.upload = async function(image) {
+exports.upload = async function(image, retentionDays = 0) {
     const packagePath = await docker.packageImage(image, path.join(os.tmpdir(), resolvePackageName(image)));
     
     const artifactName = resolveArtifactName(image);
-    await artifact.upload(artifactName, packagePath);
+    await artifact.upload(artifactName, packagePath, retentionDays);
 
     return artifactName;
 }
