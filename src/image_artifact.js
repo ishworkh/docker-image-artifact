@@ -21,9 +21,9 @@ const resolveArtifactName = (imageName) => `action_image_artifact_${resolvePacka
  *      `image_artifact_foo_latest`. In short we will have an artifact like,
  *             image_artifact_foo_latest[foo_latest]
  */
-exports.upload = async function(image, retentionDays = 0) {
+exports.upload = async function (image, retentionDays = 0) {
     const packagePath = await docker.packageImage(image, path.join(os.tmpdir(), resolvePackageName(image)));
-    
+
     const artifactName = resolveArtifactName(image);
     await artifact.upload(artifactName, packagePath, retentionDays);
 
@@ -39,11 +39,29 @@ exports.upload = async function(image, retentionDays = 0) {
  * Eg. image `foo:latest` packaged as `foo_latest` uploaded as an artifact named `image_artifact_foo_latest`
  *      can be downloaded and loaded with ${downloadDir}/${packageName} i.e /tmp/foo_latest
  */
-exports.download = async function(image) {
+exports.download = async function (image) {
     const downloadDir = await artifact.download(resolveArtifactName(image), os.tmpdir());
-    
-    const imagePackageName = resolvePackageName(image);    
-    await docker.loadImage(path.join(downloadDir, imagePackageName));  
 
-    return path.join(downloadDir, imagePackageName);
+    const imagePackagePath = path.join(downloadDir, resolvePackageName(image));
+    await docker.loadImage(imagePackagePath);
+
+    return imagePackagePath;
+}
+
+/**
+ * @param {string} token  
+ * 
+ * @returns {func} // Function to download image from another workflow  
+ */
+exports.downloadFromWorkflow = function (token) {
+    return async function (owner, repo, workflow, image) {
+        const downloadDir = await artifact.downloadFromWorkflow(
+            resolveArtifactName(image), os.tmpdir(), owner, repo, workflow, token
+        );
+
+        const imagePackagePath = path.join(downloadDir, resolvePackageName(image));
+        await docker.loadImage(imagePackagePath);
+
+        return imagePackagePath;
+    }
 }
