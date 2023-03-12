@@ -32,6 +32,7 @@ exports.upload = async function (image, retentionDays = 0) {
 
 /**
  * @param {string} image  
+ * @param {Object} artifactDownloader // Defaults to core artifact downloader
  * 
  * @returns {string} // Artifact local downloaded path 
  * 
@@ -39,29 +40,11 @@ exports.upload = async function (image, retentionDays = 0) {
  * Eg. image `foo:latest` packaged as `foo_latest` uploaded as an artifact named `image_artifact_foo_latest`
  *      can be downloaded and loaded with ${downloadDir}/${packageName} i.e /tmp/foo_latest
  */
-exports.download = async function (image) {
-    const downloadDir = await artifact.download(resolveArtifactName(image), os.tmpdir());
+exports.download = async function (image, artifactDownloader = artifact.artifactDownloader) {
+    const downloadDir = await artifactDownloader(resolveArtifactName(image), os.tmpdir());
 
     const imagePackagePath = path.join(downloadDir, resolvePackageName(image));
     await docker.loadImage(imagePackagePath);
 
     return imagePackagePath;
-}
-
-/**
- * @param {string} token  
- * 
- * @returns {func} // Function to download image from another workflow  
- */
-exports.downloadFromWorkflow = function (token) {
-    return async function (owner, repo, workflow, image) {
-        const downloadDir = await artifact.downloadFromWorkflow(
-            resolveArtifactName(image), os.tmpdir(), owner, repo, workflow, token
-        );
-
-        const imagePackagePath = path.join(downloadDir, resolvePackageName(image));
-        await docker.loadImage(imagePackagePath);
-
-        return imagePackagePath;
-    }
 }
