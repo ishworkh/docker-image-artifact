@@ -82,22 +82,20 @@ async function downloadArtifact(octokit, owner, repo, artifactId) {
 
 // Exports
 /**
- * @param {string} name 
- * @param {string} basedir
- * 
- * @returns {string}
+ * @returns {Function} // (name, basedir) => string
  */
-exports.artifactDownloader = async (name, basedir) => {
-    if (!fs.existsSync(basedir)) {
-        throw new Error(`Artifact Download failed: ${name} - Directory does not exist: ${basedir}`);
-    }
-    const downloadResponse = await getArtifactClient().downloadArtifact(name, basedir);
+exports.createArtifactDownloader = () => {
+    return async function (name, basedir) {
+        if (!fs.existsSync(basedir)) {
+            throw new Error(`Artifact Download failed: ${name} - Directory does not exist: ${basedir}`);
+        }
+        const downloadResponse = await getArtifactClient().downloadArtifact(name, basedir);
 
-    return downloadResponse.downloadPath;
+        return downloadResponse.downloadPath;
+    }
 }
 
 /**
- * 
  * @param {string} token 
  * @param {string} owner 
  * @param {string} repo 
@@ -146,25 +144,23 @@ exports.createOctokitArtifactDownloader = function (token, owner, repo, workflow
 }
 
 /**
- * @param {string} name 
- * @param {string} file 
- * @param {number} retentionDays // 0 means default value set in github
- * 
- * @returns {string}
+ * @returns Function // (name, file, retentionDays)
  */
-exports.upload = async function (name, file, retentionDays = 0) {
-    if (!fs.existsSync(file)) {
-        throw new Error(`Artifact Upload failed: ${name} - File does not exist: ${file}`);
+exports.createArtifactUploader = () => {
+    return async function (name, file, retentionDays = 0) {
+        if (!fs.existsSync(file)) {
+            throw new Error(`Artifact Upload failed: ${name} - File does not exist: ${file}`);
+        }
+
+        const uploadResponse = await getArtifactClient().uploadArtifact(
+            name, [file], path.dirname(file), { retentionDays: retentionDays }
+        );
+
+        // there is a failed item
+        if (uploadResponse.failedItems.length > 0) {
+            throw new Error(`Artifact Upload failed: ${name}`);
+        }
+
+        return name;
     }
-
-    const uploadResponse = await getArtifactClient().uploadArtifact(
-        name, [file], path.dirname(file), { retentionDays: retentionDays }
-    );
-
-    // there is a failed item
-    if (uploadResponse.failedItems.length > 0) {
-        throw new Error(`Artifact Upload failed: ${name}`);
-    }
-
-    return name;
 }
