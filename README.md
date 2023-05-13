@@ -26,17 +26,11 @@ downloadImage(image, artifactDownloader)
 
 ## createArtifactDownloader
 
-Function that creates core action artifact downloader. This downloader uses [`@actions/artifact`](https://github.com/actions/toolkit/tree/master/packages/artifact) module underneath and is capable of downloading artifacts from the same workflow.
+Function for creating core action artifact downloader. This downloader uses [`@actions/artifact`](https://github.com/actions/toolkit/tree/master/packages/artifact) module underneath and is capable of downloading artifacts from the same workflow.
 
 ## createOcotokitArtifactDownloader
 
-Factory function that creates octokit artifact downloader. This downloader uses [`octokit`](https://github.com/octokit/action.js/) module underneath. This downloader is capable of downloading artifacts from another workflow.
-
-  // Github artifact downloaders - 2 types
-  //  artifactDownloader - core action artifact downloader
-  //  octokitArtifactDownloader - octokit artifact downloader. Exposes a factory method to create the downloader.
-  artifactDownloader: artifactDownloader,
-  createOctokitArtifactDownloader
+Function for creating octokit artifact downloader. This downloader uses [`octokit`](https://github.com/octokit/action.js/) module underneath. This downloader is capable of downloading artifacts from another workflow.
 
 ## createArtifactUploader
 
